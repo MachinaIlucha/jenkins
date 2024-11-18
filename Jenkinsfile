@@ -1,14 +1,27 @@
 pipeline {
     agent any
+
     environment {
         APP_PORT = '9090'
         JOB_NAME = "${env.JOB_NAME}"
     }
+
     stages {
         stage('Build') {
             steps {
-                echo "Building the project..."
-                sh 'mvn clean package'
+                script {
+                    try {
+                        echo "Building the project"
+                        sh 'mvn clean package -B -DskipTests'
+
+                        echo "Listing files in the target directory after build:"
+                        sh 'ls -la target'
+                    } catch (Exception e) {
+                        echo "Build failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        error("Build stage failed, stopping the pipeline.")
+                    }
+                }
             }
         }
 
@@ -23,11 +36,11 @@ pipeline {
                         script {
                             try {
                                 dir('target') {
-                                    echo "Launching contact.war on port ${APP_PORT}..."
-                                    sh 'nohup java -jar contact.war &'
+                                    echo "Starting the application on port ${APP_PORT}"
+                                    sh 'java -jar contact.war'
                                 }
                             } catch (Exception e) {
-                                echo "Application launch timed out. Exiting stage."
+                                echo "Application stage timed out or failed."
                                 currentBuild.result = 'SUCCESS'
                             }
                         }
@@ -36,25 +49,25 @@ pipeline {
 
                 stage('Running Test') {
                     steps {
-                        echo "Waiting for the application to start..."
-                        sleep 30
-                        echo "Running RestIT integration test..."
-                        sh 'mvn -Dtest=RestIT test'
+                        script {
+                            echo "Waiting for the application to start..."
+                            sleep(time: 30, unit: 'SECONDS')
+
+                            echo "Running the RestIT integration tests"
+                            sh 'mvn -Dtest=RestIT test -B'
+                        }
                     }
                 }
             }
         }
     }
+
     post {
-        always {
-            echo "Cleaning up background processes..."
-            sh 'pkill -f contact.war || true'
-        }
         success {
-            echo "Build and integration test completed successfully."
+            echo "Pipeline completed successfully!"
         }
         failure {
-            echo "Build or integration test failed."
+            echo "Pipeline failed. Check the logs for more details."
         }
     }
 }
