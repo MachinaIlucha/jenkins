@@ -28,8 +28,11 @@ pipeline {
 
                 sh "mvn ${MVN_GOALS}"
                 echo "Build process completed successfully."
+
+                sh 'ls -la target'
             }
         }
+
 
         stage('Integration Test') {
             parallel {
@@ -42,8 +45,9 @@ pipeline {
                             try {
                                 timeout(time: 60, unit: 'SECONDS') {
                                     dir('target') {
+                                        sh 'ls -la'
                                         echo "Launching the application on port ${APP_PORT}."
-                                        sh "java -jar ${WAR_FILE} --server.port=${APP_PORT}"
+                                        sh "java -jar ${WAR_FILE}"
                                         echo "Application is running."
                                     }
                                 }
