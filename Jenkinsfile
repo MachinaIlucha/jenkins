@@ -12,7 +12,7 @@ pipeline {
                 script {
                     try {
                         echo "Building the project"
-                        sh 'mvn package -B -DskipTests'
+                        sh 'mvn clean package -B -DskipTests'
 
                         echo "Listing files in the target directory after build:"
                         sh 'ls -la target'
@@ -28,7 +28,7 @@ pipeline {
         stage('Integration Test') {
             parallel {
                 stage('Running Application') {
-                    agent any
+                    agent { reuseNode true }
                     options {
                         timeout(time: 60, unit: 'SECONDS')
                     }
