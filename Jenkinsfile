@@ -12,7 +12,7 @@ pipeline {
                 script {
                     try {
                         echo "Building the project"
-                        sh 'mvn clean package -B -DskipTests'
+                        sh 'mvn package -B -DskipTests'
 
                         echo "Listing files in the target directory after build:"
                         sh 'ls -la target'
@@ -37,7 +37,7 @@ pipeline {
                             try {
                                 dir("target") {
                                     echo "Starting contact.war application on port ${APP_PORT}..."
-                                    
+
                                     sh 'pwd && ls -la && nohup java -jar ./contact.war > nohup.out 2>&1 &'
                                 }
                             } catch (Exception e) {
