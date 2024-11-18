@@ -12,7 +12,7 @@ pipeline {
             steps {
                 script {
                     env.JOB_NAME = env.JOB_NAME
-                    echo "Job Name: ${env.JOB_NAME_GLOBAL}"
+                    echo "Job Name: ${env.JOB_NAME}"
                 }
             }
         }
@@ -53,7 +53,7 @@ pipeline {
                     steps {
                         sleep time: 30, unit: 'SECONDS'
                         echo "Running RestIT integration test..."
-                        echo "Using Global Job Name: ${env.JOB_NAME_GLOBAL}"
+                        echo "Using Global Job Name: ${env.JOB_NAME}"
                         sh 'mvn -B -Dtest=RestIT -DskipITs=false test'
                     }
                 }
