@@ -1,3 +1,4 @@
+def JOB_NAME
 pipeline {
     agent any
 
@@ -6,13 +7,11 @@ pipeline {
         MAVEN_OPTS = '-Xms512m -Xmx1024m'
     }
 
-    def jobName
-
     stages {
         stage('Initialize') {
             steps {
                 script {
-                    jobName = env.JOB_NAME
+                    JOB_NAME = env.JOB_NAME
                     echo "Job Name: ${jobName}"
                 }
             }
