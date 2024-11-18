@@ -1,18 +1,18 @@
-def JOB_NAME
 pipeline {
     agent any
 
     environment {
         APP_PORT = '9090'
         MAVEN_OPTS = '-Xms512m -Xmx1024m'
+        JOB_NAME = ''
     }
 
     stages {
         stage('Initialize') {
             steps {
                 script {
-                    JOB_NAME = env.JOB_NAME
-                    echo "Job Name: ${jobName}"
+                    env.JOB_NAME = env.JOB_NAME
+                    echo "Job Name: ${env.JOB_NAME_GLOBAL}"
                 }
             }
         }
@@ -33,8 +33,8 @@ pipeline {
             parallel {
                 stage('Running Application') {
                     agent any
-                    timeout(time: 60, unit: 'SECONDS') {
-                        steps {
+                    steps {
+                        timeout(time: 60, unit: 'SECONDS') {
                             script {
                                 try {
                                     dir("target") {
@@ -43,7 +43,7 @@ pipeline {
                                     }
                                     echo "Application started successfully."
                                 } catch (Exception e) {
-                                    echo "Task failed or timed out: ${e}"
+                                    echo "Task failed or timed out: ${e.message}"
                                 }
                             }
                         }
@@ -53,6 +53,7 @@ pipeline {
                     steps {
                         sleep time: 30, unit: 'SECONDS'
                         echo "Running RestIT integration test..."
+                        echo "Using Global Job Name: ${env.JOB_NAME_GLOBAL}"
                         sh 'mvn -B -Dtest=RestIT -DskipITs=false test'
                     }
                 }
