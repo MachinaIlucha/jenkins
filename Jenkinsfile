@@ -13,6 +13,9 @@ pipeline {
                     try {
                         echo "Building the project"
                         sh 'mvn clean package -B -DskipTests'
+
+                        echo "Listing files in the target directory after build:"
+                        sh 'ls -la target'
                     } catch (Exception e) {
                         echo "Build failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
