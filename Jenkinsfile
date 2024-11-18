@@ -14,16 +14,20 @@ pipeline {
             steps {
                 script {
                     jobName = env.JOB_NAME
+                    echo "Initialization started."
                     echo "Job Name: ${jobName}"
+                    echo "Application will run on port: ${APP_PORT}"
                 }
             }
         }
 
         stage('Build') {
             steps {
-                echo "Building the project..."
+                echo "Starting build process."
+                echo "Running Maven goals: ${MVN_GOALS}"
 
                 sh "mvn ${MVN_GOALS}"
+                echo "Build process completed successfully."
             }
         }
 
@@ -33,33 +37,38 @@ pipeline {
                     agent any
                     steps {
                         script {
-                            echo "Launching application on port ${APP_PORT}..."
+                            echo "Preparing to launch the application."
+                            echo "WAR file to be used: ${WAR_FILE}"
                             try {
                                 timeout(time: 60, unit: 'SECONDS') {
                                     dir('target') {
+                                        echo "Launching the application on port ${APP_PORT}."
                                         sh "java -jar ${WAR_FILE} --server.port=${APP_PORT}"
+                                        echo "Application is running."
                                     }
-                                    sleep 60
                                 }
                             } catch (Exception e) {
                                 echo "Application timed out after 60 seconds: ${e}"
+                                echo "Proceeding despite the application timeout."
                                 currentBuild.result = 'SUCCESS'
                             }
                         }
                     }
                 }
+
                 stage('Running Test') {
                     steps {
                         script {
                             try {
-                                echo "Waiting for the application to start..."
+                                echo "Waiting for the application to be ready."
                                 sleep(time: 30, unit: 'SECONDS')
-                                echo "Running RestIT integration tests..."
+                                echo "Starting RestIT integration tests."
 
                                 sh 'mvn test -Dtest=RestIT'
+                                echo "RestIT integration tests completed."
                             } catch (Exception e) {
-                                echo "Tests failed: ${e}"
-                                error("Test execution failed")
+                                echo "Test execution failed: ${e}"
+                                error("Test execution encountered an error.")
                             }
                         }
                     }
@@ -70,16 +79,16 @@ pipeline {
 
     post {
         success {
-            echo "Build, application run, and tests completed successfully!"
+            echo "Build, application run, and tests completed successfully."
         }
         failure {
-            echo "Build or tests encountered a failure."
+            echo "Build or tests failed."
         }
         unstable {
             echo "Build completed but marked as unstable."
         }
         changed {
-            echo "Build status has changed from the previous run."
+            echo "Build status has changed compared to the previous run."
         }
     }
 }
