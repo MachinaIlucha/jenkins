@@ -4,7 +4,7 @@ pipeline {
     environment {
         APP_PORT = '9090'
         MAVEN_OPTS = '-Xms512m -Xmx1024m'
-        JOB_NAME = "${env.JOB_NAME}"
+        JOB_NAME = env.JOB_NAME
     }
 
     stages {
@@ -12,6 +12,7 @@ pipeline {
             steps {
                 script {
                     try {
+                        echo "Building the project in job: ${JOB_NAME}"
                         sh 'mvn clean -B package -DskipTests'
                     } catch (Exception e) {
                         echo "Build failed: ${e.message}"
@@ -21,28 +22,29 @@ pipeline {
                 }
             }
         }
+
         stage('Integration Test') {
             parallel {
                 stage('Running Application') {
                     agent any
                     steps {
-                        options {
-                            timeout(time: 60, unit: 'SECONDS')
-                        }
-                        script {
-                            try {
-                                dir("target") {
-                                    echo "Starting contact.war application on port ${APP_PORT}..."
-                                    sh 'java -jar contact.war'
+                        timeout(time: 60, unit: 'SECONDS') {
+                            script {
+                                try {
+                                    dir("target") {
+                                        echo "Starting contact.war application on port ${APP_PORT}..."
+                                        sh 'nohup java -jar contact.war &'
+                                    }
+                                    echo "Application started successfully."
+                                } catch (Exception e) {
+                                    echo "Task failed or timed out: ${e.message}"
                                 }
-                                echo "Application started successfully."
-                            } catch (Exception e) {
-                                echo "Task failed or timed out: ${e.message}"
                             }
                         }
                     }
                 }
                 stage('Running Test') {
+                    agent any
                     steps {
                         script {
                             echo "Waiting for the application to start"
@@ -50,7 +52,7 @@ pipeline {
                         }
                         echo "Running RestIT integration test..."
                         echo "Using Global Job Name: ${JOB_NAME}"
-                        sh 'mvn -B -Dtest=RestIT -DskipITs=false test'
+                        sh 'mvn -B -Dtest=RestIT test'
                     }
                 }
             }
