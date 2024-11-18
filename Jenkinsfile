@@ -4,18 +4,10 @@ pipeline {
     environment {
         APP_PORT = '9090'
         MAVEN_OPTS = '-Xms512m -Xmx1024m'
-        JOB_NAME = ''
+        JOB_NAME = "${env.JOB_NAME}"
     }
 
     stages {
-        stage('Initialize') {
-            steps {
-                script {
-                    env.JOB_NAME = env.JOB_NAME
-                    echo "Job Name: ${env.JOB_NAME}"
-                }
-            }
-        }
         stage('Build') {
             steps {
                 script {
@@ -34,30 +26,43 @@ pipeline {
                 stage('Running Application') {
                     agent any
                     steps {
-                        timeout(time: 60, unit: 'SECONDS') {
-                            script {
-                                try {
-                                    dir("target") {
-                                        echo "Starting contact.war application on port ${APP_PORT}..."
-                                        sh 'java -jar contact.war'
-                                    }
-                                    echo "Application started successfully."
-                                } catch (Exception e) {
-                                    echo "Task failed or timed out: ${e.message}"
+                        options {
+                            timeout(time: 60, unit: 'SECONDS')
+                        }
+                        script {
+                            try {
+                                dir("target") {
+                                    echo "Starting contact.war application on port ${APP_PORT}..."
+                                    sh 'java -jar contact.war'
                                 }
+                                echo "Application started successfully."
+                            } catch (Exception e) {
+                                echo "Task failed or timed out: ${e.message}"
                             }
                         }
                     }
                 }
                 stage('Running Test') {
                     steps {
-                        sleep time: 30, unit: 'SECONDS'
+                        script {
+                            echo "Waiting for the application to start"
+                            sleep(time: 30, unit: 'SECONDS')
+                        }
                         echo "Running RestIT integration test..."
-                        echo "Using Global Job Name: ${env.JOB_NAME}"
+                        echo "Using Global Job Name: ${JOB_NAME}"
                         sh 'mvn -B -Dtest=RestIT -DskipITs=false test'
                     }
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Build and tests completed successfully for ${JOB_NAME}"
+        }
+        failure {
+            echo "Build or tests failed for ${JOB_NAME}"
         }
     }
 }
