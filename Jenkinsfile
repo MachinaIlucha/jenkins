@@ -35,13 +35,16 @@ pipeline {
                     steps {
                         script {
                             try {
-                                dir('target') {
-                                    echo "Starting the application on port ${APP_PORT}"
-                                    sh 'java -jar contact.war &'
+                                dir("target") {
+                                    echo "Starting contact.war application on port ${APP_PORT}..."
+                                    
+                                    sh 'pwd && ls -la && nohup java -jar ./contact.war > nohup.out 2>&1 &'
                                 }
+                                echo "Application started successfully."
                             } catch (Exception e) {
-                                echo "Application stage timed out or failed."
-                                currentBuild.result = 'SUCCESS'
+                                echo "Application failed to start: ${e.message}"
+                                currentBuild.result = 'FAILURE'
+                                error("Stopping the pipeline due to application startup failure")
                             }
                         }
                     }
