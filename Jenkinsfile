@@ -78,7 +78,6 @@ pipeline {
                         script {
                             try {
                                 echo "⏳ Waiting for the application to be ready."
-                                unstash 'built-artifacts'
                                 sleep(time: 30, unit: 'SECONDS')
 
                                 echo "🧪 Starting RestIT integration tests."
@@ -113,4 +112,3 @@ pipeline {
         }
     }
 }
-
