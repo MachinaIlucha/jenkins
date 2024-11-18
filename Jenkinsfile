@@ -16,6 +16,9 @@ pipeline {
 
                         echo "Listing files in the target directory after build:"
                         sh 'ls -la target'
+
+                        echo "Stashing contact.war file"
+                        stash includes: 'target/contact.war', name: 'contact-war'
                     } catch (Exception e) {
                         echo "Build failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
@@ -28,16 +31,18 @@ pipeline {
         stage('Integration Test') {
             parallel {
                 stage('Running Application') {
-                    agent { reuseNode true }
+                    agent any
                     options {
                         timeout(time: 60, unit: 'SECONDS')
                     }
                     steps {
                         script {
                             try {
+                                echo "Unstashing contact.war file"
+                                unstash 'contact-war'
+
                                 dir("target") {
                                     echo "Starting contact.war application on port ${APP_PORT}..."
-
                                     sh 'pwd && ls -la && nohup java -jar ./contact.war > nohup.out 2>&1 &'
                                 }
                             } catch (Exception e) {
