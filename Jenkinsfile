@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         APP_PORT = '9090'
-        MAVEN_OPTS = '-Xms512m -Xmx1024m'
         JOB_NAME = "${env.JOB_NAME}"
     }
 
@@ -12,12 +11,12 @@ pipeline {
             steps {
                 script {
                     try {
-                        echo "Building the project in job: ${JOB_NAME}"
-                        sh 'mvn clean -B package -DskipTests'
+                        echo "Building the project"
+                        sh 'mvn clean package -B -DskipTests'
                     } catch (Exception e) {
                         echo "Build failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
-                        error("Stopping the pipeline due to build failure")
+                        error("Build stage failed, stopping the pipeline.")
                     }
                 }
             }
@@ -27,32 +26,33 @@ pipeline {
             parallel {
                 stage('Running Application') {
                     agent any
+                    options {
+                        timeout(time: 60, unit: 'SECONDS')
+                    }
                     steps {
-                        timeout(time: 60, unit: 'SECONDS') {
-                            script {
-                                try {
-                                    dir("target") {
-                                        echo "Starting contact.war application on port ${APP_PORT}..."
-                                        sh 'nohup java -jar contact.war &'
-                                    }
-                                    echo "Application started successfully."
-                                } catch (Exception e) {
-                                    echo "Task failed or timed out: ${e.message}"
+                        script {
+                            try {
+                                dir('target') {
+                                    echo "Starting the application on port ${APP_PORT}"
+                                    sh 'java -jar contact.war &'
                                 }
+                            } catch (Exception e) {
+                                echo "Application stage timed out or failed."
+                                currentBuild.result = 'SUCCESS'
                             }
                         }
                     }
                 }
+
                 stage('Running Test') {
-                    agent any
                     steps {
                         script {
-                            echo "Waiting for the application to start"
+                            echo "Waiting for the application to start..."
                             sleep(time: 30, unit: 'SECONDS')
+
+                            echo "Running the RestIT integration tests"
+                            sh 'mvn -Dtest=RestIT test -B'
                         }
-                        echo "Running RestIT integration test..."
-                        echo "Using Global Job Name: ${JOB_NAME}"
-                        sh 'mvn -B -Dtest=RestIT test'
                     }
                 }
             }
@@ -61,10 +61,11 @@ pipeline {
 
     post {
         success {
-            echo "Build and tests completed successfully for ${JOB_NAME}"
+            echo "Pipeline completed successfully!"
         }
         failure {
-            echo "Build or tests failed for ${JOB_NAME}"
+            echo "Pipeline failed. Check the logs for more details."
         }
     }
 }
+
