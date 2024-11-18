@@ -30,6 +30,8 @@ pipeline {
                 echo "Build process completed successfully."
 
                 sh 'ls -la target'
+
+                stash includes: 'target/**', name: 'built-artifacts'
             }
         }
 
@@ -39,6 +41,8 @@ pipeline {
                 stage('Running Application') {
                     agent any
                     steps {
+                        unstash 'built-artifacts'
+
                         script {
                             echo "Preparing to launch the application."
                             echo "WAR file to be used: ${WAR_FILE}"
@@ -62,6 +66,8 @@ pipeline {
 
                 stage('Running Test') {
                     steps {
+                        unstash 'built-artifacts'
+
                         script {
                             try {
                                 echo "Waiting for the application to be ready."
