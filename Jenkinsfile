@@ -37,7 +37,7 @@ pipeline {
                             try {
                                 dir('target') {
                                     echo "Starting the application on port ${APP_PORT}"
-                                    sh 'java -jar contact.war'
+                                    sh 'java -jar ./contact.war'
                                 }
                             } catch (Exception e) {
                                 echo "Application stage timed out or failed."
