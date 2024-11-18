@@ -39,6 +39,7 @@ pipeline {
                                     dir('target') {
                                         sh "java -jar ${WAR_FILE} --server.port=${APP_PORT}"
                                     }
+                                    sleep 60
                                 }
                             } catch (Exception e) {
                                 echo "Application timed out after 60 seconds: ${e}"
