@@ -4,7 +4,7 @@ pipeline {
     environment {
         APP_PORT = '9090'
         MAVEN_OPTS = '-Xms512m -Xmx1024m'
-        JOB_NAME = env.JOB_NAME
+        JOB_NAME = "${env.JOB_NAME}"
     }
 
     stages {
