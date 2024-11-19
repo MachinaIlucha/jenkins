@@ -52,7 +52,7 @@ pipeline {
                                 echo "📦 WAR file to be used: ${WAR_FILE}"
 
                                 timeout(time: 60, unit: 'SECONDS') {
-                                    dir('${env.WORKSPACE}/target') {
+                                    dir("${env.WORKSPACE}/target") {
                                         echo "🌐 Launching the application on port ${APP_PORT}."
                                         sh """
                                             set -e
