@@ -52,7 +52,7 @@ pipeline {
                                 echo "📦 WAR file to be used: ${WAR_FILE}"
 
                                 timeout(time: 60, unit: 'SECONDS') {
-                                    dir('/var/jenkins_home/workspace/my-jenkins/target') {
+                                    dir('${env.WORKSPACE}/target') {
                                         echo "🌐 Launching the application on port ${APP_PORT}."
                                         sh """
                                             set -e
