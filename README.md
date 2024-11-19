@@ -13,7 +13,7 @@ So, write a **Jenkinsfile** in the root of the repository and define there:
 - In this task, stop the parallel stages by [timeout](https://e.printstacktrace.blog/how-to-time-out-jenkins-pipeline-stage-and-keep-the-pipeline-running/)
 - To successfully complete the process, use the **try {}** **catch {}** [construction](https://e.printstacktrace.blog/how-to-time-out-jenkins-pipeline-stage-and-keep-the-pipeline-running/)
 
-Use the following template for the Jenkinsfile:
+1Use the following template for the Jenkinsfile:
 
 ```groovy
 pipeline {
