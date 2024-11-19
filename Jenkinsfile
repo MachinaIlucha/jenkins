@@ -33,8 +33,6 @@ pipeline {
                             mvn ${MVN_GOALS}
                         """
                         echo "✅ Build process completed successfully."
-
-                        stash includes: 'target/**', name: 'built-artifacts'
                     } catch (Exception e) {
                         echo "❌ Build failed: ${e.message}"
                         error("❗ Build stage encountered an error.")
@@ -51,11 +49,10 @@ pipeline {
                         script {
                             try {
                                 echo "🚀 Preparing to launch the application."
-                                unstash 'built-artifacts'
                                 echo "📦 WAR file to be used: ${WAR_FILE}"
 
                                 timeout(time: 60, unit: 'SECONDS') {
-                                    dir('target') {
+                                    dir('/var/jenkins_home/workspace/my-jenkins/target') {
                                         echo "🌐 Launching the application on port ${APP_PORT}."
                                         sh """
                                             set -e
